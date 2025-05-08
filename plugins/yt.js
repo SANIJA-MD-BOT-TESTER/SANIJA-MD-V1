@@ -1,3 +1,9 @@
+// yt.js
+
+const { cmd } = require('../lib'); // Adjust path based on your folder structure
+const yts = require('yt-search');
+const fetch = require('node-fetch');
+
 let apikey = 'b836d6b2292926bc';
 
 cmd({
@@ -8,7 +14,7 @@ cmd({
     desc: "Download audios from YouTube",
     category: "download",
     filename: __filename
-},
+}, 
 async (conn, m, mek, { from, q, reply, prefix }) => {
     try {
         if (!q) return await reply("❌ Please enter a song name or YouTube URL!");
