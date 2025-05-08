@@ -1,4 +1,4 @@
-const { cmd } = require('../lib/command');
+const { cmd } = require('../command');
 const os = require("os");
 const { runtime } = require('../lib/functions');
 
