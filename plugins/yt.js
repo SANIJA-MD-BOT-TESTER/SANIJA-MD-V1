@@ -1,21 +1,19 @@
-// yt.js
-
-const { cmd } = require('../lib'); // Adjust path based on your folder structure
+const { cmd } = require('../lib/command'); // Adjust this if cmd is in a different file
 const yts = require('yt-search');
 const fetch = require('node-fetch');
+const config = require('../config'); // Optional: if you have LOGO/FOOTER in config
 
 let apikey = 'b836d6b2292926bc';
 
 cmd({
     pattern: "song",
     alias: ["ytmp3", "play"],
-    use: ".song lelena",
+    use: ".song <query>",
     react: "🎧",
     desc: "Download audios from YouTube",
     category: "download",
     filename: __filename
-}, 
-async (conn, m, mek, { from, q, reply, prefix }) => {
+}, async (conn, m, mek, { from, q, reply }) => {
     try {
         if (!q) return await reply("❌ Please enter a song name or YouTube URL!");
 
@@ -30,13 +28,11 @@ async (conn, m, mek, { from, q, reply, prefix }) => {
             `👀 *Views*: ${result.views}\n` +
             `⏳ *Duration*: ${result.timestamp}\n` +
             `🔗 *URL*: ${result.url}\n\n` +
-            `*Reply with the number*\n\n` +
-            `1. Audio (MP3)\n` +
-            `2. Document (MP3)`;
+            `*Reply with the number:*\n\n1. Audio (MP3)\n2. Document (MP3)`;
 
         const sentMsg = await conn.sendMessage(from, {
             image: { url: result.thumbnail || config.LOGO },
-            caption: caption,
+            caption,
             footer: config.FOOTER || "© SANIJA MD"
         }, { quoted: mek });
 
@@ -92,16 +88,15 @@ async (conn, m, mek, { from, q, reply, prefix }) => {
 
         conn.ev.on('messages.upsert', replyHandler);
 
-        const handlerRef = { handler: replyHandler };
         conn.songHandlers = conn.songHandlers || {};
-        conn.songHandlers[sentMsg.key.id] = handlerRef;
+        conn.songHandlers[sentMsg.key.id] = { handler: replyHandler };
 
         setTimeout(() => {
             if (conn.songHandlers[sentMsg.key.id]) {
                 conn.ev.off('messages.upsert', conn.songHandlers[sentMsg.key.id].handler);
                 delete conn.songHandlers[sentMsg.key.id];
             }
-        }, 300000); // 5 minutes
+        }, 5 * 60 * 1000); // 5 minutes
 
     } catch (e) {
         console.error(e);
