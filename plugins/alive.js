@@ -1,42 +1,89 @@
-const { cmd } = require('../command');
 const os = require("os");
-const { runtime } = require('../lib/functions');
+const { runtime } = require("../lib/functions");
+const { cmd } = require("../command");
+const config = require("../config");
 
-cmd({
-    pattern: "alive",
-    alias: ["status", "runtime", "uptime"],
-    desc: "Check uptime and system status",
-    category: "main",
-    react: "📟",
-    filename: __filename
-},
-async (conn, mek, m, { from, reply }) => {
-    try {
-        const uptime = runtime(process.uptime());
-        const used = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-        const total = (os.totalmem() / 1024 / 1024).toFixed(2);
+const plugin = {
+  pattern: "alive",
+  react: "👨‍💻",
+  alias: ["test", "bot", "online"],
+  desc: "Check if the bot is online and get system info.",
+  category: "main",
+  filename: __filename
+};
 
-        const status = `╭━━〔 *SANIJA-MD Alive* 〕━━
-┃⏳ *Uptime:* ${uptime}
-┃📟 *RAM:* ${used}MB / ${total}MB
-┃⚙️ *Host:* ${os.hostname()}
-┃🧬 *Version:* 1.0.1
-┃👤 *Owner:* Sanija Nimtharu
-╰━━━━━━━━━━━━━━`;
+cmd(plugin, async (conn, mek, m, {
+  from,
+  prefix,
+  l,
+  quoted,
+  body,
+  isCmd,
+  command,
+  args,
+  q,
+  isGroup,
+  sender,
+  senderNumber,
+  botNumber2,
+  botNumber,
+  pushname,
+  isMe,
+  isOwner,
+  groupMetadata,
+  groupName,
+  participants,
+  groupAdmins,
+  isBotAdmins,
+  isAdmins,
+  reply
+}) => {
+  try {
+    let hostname = os.hostname();
+    if (hostname.length == 12) hostname = "replit";
+    else if (hostname.length == 36) hostname = "heroku";
+    else if (hostname.length == 8) hostname = "koyeb";
 
-        await conn.sendMessage(from, {
-            image: { url: 'https://files.catbox.moe/b61wmw.png' },
-            caption: status,
-            footer: "© 2025 Sanija MD",
-            templateButtons: [
-                { index: 1, quickReplyButton: { displayText: "Ping 📍", id: ".ping" }},
-                { index: 2, quickReplyButton: { displayText: "System 📊", id: ".menu" }},
-                { index: 3, urlButton: { displayText: "YouTube", url: "https://youtube.com/@sanijamd" }}
-            ]
-        }, { quoted: mek });
+    const uptime = runtime(process.uptime());
+    const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+    const memTotal = Math.round(os.totalmem() / 1024 / 1024);
 
-    } catch (e) {
-        console.error("Error in alive command:", e);
-        reply("❌ An error occurred:\n" + e.message);
+    const msg = `👋 Hello ${pushname}, I'm *alive* now.\n\n*🚀 Version:* ${require("../package.json").version}\n*📟 Memory:* ${memUsed}MB / ${memTotal}MB\n*🕒 Uptime:* ${uptime}\n*📍 Platform:* ${hostname}\n\n🐼 Powered by *SANIJA-MD*\n🌸 Have a nice day!`;
+
+    const image = { url: config.LOGO || "https://files.catbox.moe/b61wmw.png" };
+
+    if (config.MODE === "button") {
+      const buttons = [
+        { buttonId: prefix + "menu", buttonText: { displayText: "MENU" } },
+        { buttonId: prefix + "ping", buttonText: { displayText: "PING" } }
+      ];
+      await conn.sendMessage(from, {
+        image,
+        caption: msg,
+        footer: config.FOOTER,
+        buttons,
+        headerType: 4,
+        viewOnce: true
+      }, { quoted: mek });
+    } else {
+      const sections = [{
+        title: "Choose an option",
+        rows: [
+          { title: "📖 Menu", rowId: prefix + "menu", description: "Command Menu" },
+          { title: "📍 Ping", rowId: prefix + "ping", description: "Check Bot Speed" }
+        ]
+      }];
+      await conn.replyList(from, {
+        image,
+        caption: msg,
+        footer: config.FOOTER,
+        buttonText: "Select an option",
+        sections
+      }, { quoted: mek });
     }
+
+  } catch (err) {
+    reply("⚠️ Error occurred!");
+    console.error("Alive Plugin Error:", err);
+  }
 });
