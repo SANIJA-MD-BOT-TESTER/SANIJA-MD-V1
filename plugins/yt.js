@@ -1,105 +1,80 @@
-const { cmd } = require('../lib/command'); // Adjust this if cmd is in a different file
+const { cmd, commands } = require('../command');
 const yts = require('yt-search');
-const fetch = require('node-fetch');
-const config = require('../config'); // Optional: if you have LOGO/FOOTER in config
-
-let apikey = 'b836d6b2292926bc';
+const ddownr = require('denethdev-ytmp3'); // Importing the denethdev-ytmp3 package for downloading
 
 cmd({
-    pattern: "song",
-    alias: ["ytmp3", "play"],
-    use: ".song <query>",
-    react: "🎧",
-    desc: "Download audios from YouTube",
-    category: "download",
-    filename: __filename
-}, async (conn, m, mek, { from, q, reply }) => {
-    try {
-        if (!q) return await reply("❌ Please enter a song name or YouTube URL!");
-
-        const url = q.replace(/\?si=[^&]*/g, "");
-        const results = await yts(url);
-
-        if (!results?.videos?.length) return await reply("🔍 No videos found for your query!");
-
-        const result = results.videos[0];
-        const caption = `🎧 *SANIJA 𝕄𝔻 𝕐𝕋𝕄ℙ3 𝔻𝕃*\n\n` +
-            `📌 *Title*: ${result.title}\n` +
-            `👀 *Views*: ${result.views}\n` +
-            `⏳ *Duration*: ${result.timestamp}\n` +
-            `🔗 *URL*: ${result.url}\n\n` +
-            `*Reply with the number:*\n\n1. Audio (MP3)\n2. Document (MP3)`;
-
-        const sentMsg = await conn.sendMessage(from, {
-            image: { url: result.thumbnail || config.LOGO },
-            caption,
-            footer: config.FOOTER || "© SANIJA MD"
-        }, { quoted: mek });
-
-        const replyHandler = async (messageUpdate) => {
-            const incoming = messageUpdate.messages[0];
-            if (!incoming.message) return;
-
-            if (incoming.message.extendedTextMessage?.contextInfo?.stanzaId === sentMsg.key.id) {
-                const choice = incoming.message.conversation || incoming.message.extendedTextMessage?.text;
-
-                if (choice === '1' || choice === '2') {
-                    try {
-                        await conn.sendMessage(from, { react: { text: '👾', key: incoming.key } });
-
-                        const apiUrl = `https://api-dark-shan-yt.koyeb.app/download/ytmp3_v5?url=${encodeURIComponent(result.url)}&apikey=${apikey}`;
-                        const response = await fetch(apiUrl);
-                        const data = await response.json();
-
-                        if (data.status && data.data?.download) {
-                            await conn.sendMessage(from, {
-                                text: `⬇ *Downloading:* ${result.title}\nPlease wait...`
-                            }, { quoted: incoming });
-
-                            const cleanFileName = `${result.title}.mp3`.replace(/[^\w\s.-]/gi, '');
-
-                            const sendOptions = {
-                                mimetype: 'audio/mpeg',
-                                fileName: cleanFileName,
-                                quoted: incoming
-                            };
-
-                            if (choice === '1') {
-                                await conn.sendMessage(from, {
-                                    audio: { url: data.data.download },
-                                    ...sendOptions
-                                });
-                            } else {
-                                await conn.sendMessage(from, {
-                                    document: { url: data.data.download },
-                                    ...sendOptions
-                                });
-                            }
-                        } else {
-                            await reply("❌ Failed to download audio. Please try again later.");
-                        }
-                    } catch (error) {
-                        console.error("Error handling reply:", error);
-                        await reply("⚠ Error processing your request");
-                    }
-                }
-            }
-        };
-
-        conn.ev.on('messages.upsert', replyHandler);
-
-        conn.songHandlers = conn.songHandlers || {};
-        conn.songHandlers[sentMsg.key.id] = { handler: replyHandler };
-
-        setTimeout(() => {
-            if (conn.songHandlers[sentMsg.key.id]) {
-                conn.ev.off('messages.upsert', conn.songHandlers[sentMsg.key.id].handler);
-                delete conn.songHandlers[sentMsg.key.id];
-            }
-        }, 5 * 60 * 1000); // 5 minutes
-
-    } catch (e) {
-        console.error(e);
-        await reply("⚠ Error! Failed to process your request.");
+  pattern: "song",
+  desc: "Download songs.",
+  category: "download",
+  react: '🎧',
+  filename: __filename
+}, async (messageHandler, context, quotedMessage, { from, reply, q }) => {
+  try {
+    if (!q) return reply("*Please Provide A Song Name or Url 🙄*");
+    
+    // Search for the song using yt-search
+    const searchResults = await yts(q);
+    if (!searchResults || searchResults.videos.length === 0) {
+      return reply("*No Song Found Matching Your Query 🧐*");
     }
+
+    const songData = searchResults.videos[0];
+    const songUrl = songData.url;
+
+    // Using denethdev-ytmp3 to fetch the download link
+    const result = await ddownr.download(songUrl, 'mp3'); // Download in mp3 format
+    const downloadLink = result.downloadUrl; // Get the download URL
+
+    let songDetailsMessage = `*SANIJA-MD ＹＯＵＴＵＢＥ ＡＵＤＩＯ ＤＬ*\n\n`;
+    songDetailsMessage += `*⚜ Title:* ${songData.title}\n`;
+    songDetailsMessage += `*👀 Views:* ${songData.views}\n`;
+    songDetailsMessage += `*⏰ Duration:* ${songData.timestamp}\n`;
+    songDetailsMessage += `*📆 Uploaded:* ${songData.ago}\n`;
+    songDetailsMessage += `*📽 Channel:* ${songData.author.name}\n`;
+    songDetailsMessage += `*🖇 URL:* ${songData.url}\n\n`;
+    songDetailsMessage += `*Choose Your Download Format:*\n\n`;
+    songDetailsMessage += `1 || Audio File 🎶\n`;
+    songDetailsMessage += `2 || Document File 📂\n\n`;
+    songDetailsMessage += `> SANIJA-MD By SANIJA NIMTHARU®`;
+
+    // Send the video thumbnail with song details
+    const sentMessage = await messageHandler.sendMessage(from, {
+      image: { url: songData.thumbnail },
+      caption: songDetailsMessage,
+    }, { quoted: quotedMessage });
+
+    // Listen for the user's reply to select the download format
+    messageHandler.ev.on("messages.upsert", async (update) => {
+      const message = update.messages[0];
+      if (!message.message || !message.message.extendedTextMessage) return;
+
+      const userReply = message.message.extendedTextMessage.text.trim();
+
+      // Handle the download format choice
+      if (message.message.extendedTextMessage.contextInfo.stanzaId === sentMessage.key.id) {
+        switch (userReply) {
+          case '1': // Audio File
+            await messageHandler.sendMessage(from, {
+              audio: { url: downloadLink },
+              mimetype: "audio/mpeg"
+            }, { quoted: quotedMessage });
+            break;
+          case '2': // Document File
+            await messageHandler.sendMessage(from, {
+              document: { url: downloadLink },
+              mimetype: 'audio/mpeg',
+              fileName: `${songData.title}.mp3`,
+              caption: `${songData.title}\n\n> SANIJA-MD By SANIJA NIMTHARU®`
+            }, { quoted: quotedMessage });
+            break;
+          default:
+            reply("*Invalid Option. Please Select A Valid Option 🙄*");
+            break;
+        }
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    reply("*An Error Occurred While Processing Your Request 😔*");
+  }
 });
