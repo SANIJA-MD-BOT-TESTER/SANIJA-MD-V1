@@ -1,77 +1,99 @@
+// Import necessary modules
 const os = require("os");
-const { runtime } = require("../lib/functions"); // Assuming runtime formats uptime
+const { cmd } = require("../command");  // Ensure this is the correct path for your `cmd` function
+const { runtime } = require("../lib/functions");  // Adjust this path as necessary
 const config = require("../config");
 
-const alivePlugin = {
-  pattern: "alive", // Trigger command
-  react: "👨‍💻",    // Reaction emoji
-  alias: ["online", "test", "bot"], // Aliases
+// Define the plugin object
+const plugin = {
+  pattern: "alive",
+  react: "👨‍💻",
+  alias: ["online", "test", "bot"],
   desc: "Check if the bot is online and get system info.",
-  category: "main", // Category
+  category: "main",
   filename: __filename
 };
 
-// Command handler
-cmd(alivePlugin, async (conn, mek, m, { 
-  from, prefix, pushname, reply 
+// Register the command using the cmd function
+cmd(plugin, async (conn, mek, m, {
+  from,
+  prefix,
+  l,
+  quoted,
+  body,
+  isCmd,
+  command,
+  args,
+  q,
+  isGroup,
+  sender,
+  senderNumber,
+  botNumber2,
+  botNumber,
+  pushname,
+  isMe,
+  isOwner,
+  groupMetadata,
+  groupName,
+  participants,
+  groupAdmins,
+  isBotAdmins,
+  isAdmins,
+  reply
 }) => {
   try {
-    // Determine the platform the bot is running on
     let hostname = os.hostname();
-    if (hostname.length === 12) hostname = "replit";
-    else if (hostname.length === 36) hostname = "heroku";
-    else if (hostname.length === 8) hostname = "koyeb";
     
-    // Format the uptime, memory usage, and version
-    const message = `👋 Hello ${pushname}, I'm *alive* now.\n\n*🚀 Version:* ${require("../package.json").version}\n*📟 Memory:* ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${Math.round(require('os').totalmem() / 1024 / 1024)}MB\n*🕒 Uptime:* ${runtime(process.uptime())}\n*📍 Platform:* ${hostname}\n\n🐼 Powered by SANIJA-MD\n🌸 Have a nice day!`;
+    // Check for platform names based on the hostname
+    if (hostname.length == 12) hostname = "replit";
+    else if (hostname.length == 36) hostname = "heroku";
+    else if (hostname.length == 8) hostname = "koyeb";
 
-    // Send the loading steps to simulate a loading state
-    const loadingSteps = ["LOADING ●●○○○○", "LOADING ●●●●○○", "LOADING ●●●●●●", "`COMPLETED ✅`"];
-    const { key } = await conn.sendMessage(from, { text: loadingSteps[0] });
+    // Get uptime and memory usage
+    const uptime = runtime(process.uptime());
+    const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+    const memTotal = Math.round(os.totalmem() / 1024 / 1024);
 
-    for (let i = 1; i < loadingSteps.length; i++) {
-      await conn.sendMessage(from, { text: loadingSteps[i], edit: key });
-    }
+    // Create the message
+    const msg = `👋 Hello ${pushname}, I'm *alive* now.\n\n*🚀 Version:* ${require("../package.json").version}\n*📟 Memory:* ${memUsed}MB / ${memTotal}MB\n*🕒 Uptime:* ${uptime}\n*📍 Platform:* ${hostname}\n\n🐼 Powered by *SANIJA-MD*\n🌸 Have a nice day!`;
 
-    // Send response with buttons (or menu)
-    if (config.MODE === "nonbutton") {
-      // Menu configuration for non-button mode
-      const sections = [{
-        title: 'Select an Option',
-        rows: [
-          { title: '1', rowId: prefix + "menu", description: "Command Menu" },
-          { title: '2', rowId: prefix + "ping", description: "Check Bot Speed" }
-        ]
-      }];
-      const image = { url: config.ALIVE_IMG };
-      const replyMessage = {
-        caption: message,
-        image,
-        footer: config.BOT_NAME,
-        buttonText: "*🔢 Reply below number*",
-        sections
-      };
-      await conn.replyList(from, replyMessage, { quoted: mek });
-    } else if (config.MODE === "button") {
-      // Button configuration for button mode
-      const image = { url: config.ALIVE_IMG };
+    // Define the image to send with the message
+    const image = { url: config.LOGO || "https://files.catbox.moe/b61wmw.png" };
+
+    // Choose between sending a button message or a list message
+    if (config.MODE === "button") {
       const buttons = [
         { buttonId: prefix + "menu", buttonText: { displayText: "MENU" } },
         { buttonId: prefix + "ping", buttonText: { displayText: "PING" } }
       ];
-      const buttonMessage = {
+      await conn.sendMessage(from, {
         image,
-        caption: message,
-        footer: config.BOT_NAME,
+        caption: msg,
+        footer: config.FOOTER,
         buttons,
-        headerType: 1,
+        headerType: 4,
         viewOnce: true
-      };
-      await conn.sendMessage(from, buttonMessage, { quoted: mek });
+      }, { quoted: mek });
+    } else {
+      const sections = [{
+        title: "Choose an option",
+        rows: [
+          { title: "📖 Menu", rowId: prefix + "menu", description: "Command Menu" },
+          { title: "📍 Ping", rowId: prefix + "ping", description: "Check Bot Speed" }
+        ]
+      }];
+      await conn.replyList(from, {
+        image,
+        caption: msg,
+        footer: config.FOOTER,
+        buttonText: "Select an option",
+        sections
+      }, { quoted: mek });
     }
-  } catch (error) {
+    
+  } catch (err) {
     // Handle any errors
-    reply("⚠️ *Error occurred!*");
-    console.error(error);
+    reply("⚠️ Error occurred!");
+    console.error("Alive Plugin Error:", err);
   }
 });
