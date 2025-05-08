@@ -4,46 +4,39 @@ const { runtime } = require('../lib/functions');
 
 cmd({
     pattern: "alive",
-    alias: ["status", "uptime", "runtime"],
-    desc: "Check system status",
+    alias: ["status", "runtime", "uptime"],
+    desc: "Check uptime and system status",
     category: "main",
-    react: "🔋",
+    react: "📟",
     filename: __filename
-}, async (conn, mek, m, {
-    from, reply
-}) => {
+},
+async (conn, mek, m, { from, reply }) => {
     try {
         const uptime = runtime(process.uptime());
-        const usedMem = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-        const totalMem = (os.totalmem() / 1024 / 1024).toFixed(2);
-        const hostname = os.hostname();
+        const used = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+        const total = (os.totalmem() / 1024 / 1024).toFixed(2);
 
-        const statusMsg = `╭━━〔 *🚀 SANIJA-MD IS ONLINE* 〕━━⊷
-┃◈ *🕒 Uptime:* ${uptime}
-┃◈ *📟 RAM:* ${usedMem} MB / ${totalMem} MB
-┃◈ *⚙️ Host:* ${hostname}
-┃◈ *👨‍💻 Owner:* Sanija Nimtharu
-┃◈ *🧬 Version:* 1.0.1
-╰━━━━━━━━━━━━━━━━━━━⊷
-*© Powered by SANIJA-MD*`;
+        const status = `╭━━〔 *SANIJA-MD Alive* 〕━━
+┃⏳ *Uptime:* ${uptime}
+┃📟 *RAM:* ${used}MB / ${total}MB
+┃⚙️ *Host:* ${os.hostname()}
+┃🧬 *Version:* 1.0.1
+┃👤 *Owner:* Sanija Nimtharu
+╰━━━━━━━━━━━━━━`;
 
         await conn.sendMessage(from, {
-            image: { url: 'https://files.catbox.moe/b61wmw.png' }, // or use your uploaded image
-            caption: statusMsg,
-            footer: '⚡ Sanija MD Bot',
-            buttons: [
-                { buttonId: '.ping', buttonText: { displayText: 'Ping 📍' }, type: 1 },
-                { buttonId: '.menu', buttonText: { displayText: 'System 📊' }, type: 1 }
-            ],
-            headerType: 4, // Image header
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true
-            }
+            image: { url: 'https://files.catbox.moe/b61wmw.png' },
+            caption: status,
+            footer: "© 2025 Sanija MD",
+            templateButtons: [
+                { index: 1, quickReplyButton: { displayText: "Ping 📍", id: ".ping" }},
+                { index: 2, quickReplyButton: { displayText: "System 📊", id: ".menu" }},
+                { index: 3, urlButton: { displayText: "YouTube", url: "https://youtube.com/@sanijamd" }}
+            ]
         }, { quoted: mek });
 
-    } catch (err) {
-        console.error("Alive plugin error:", err);
-        reply("⚠️ Error showing system status.");
+    } catch (e) {
+        console.error("Error in alive command:", e);
+        reply("❌ An error occurred:\n" + e.message);
     }
 });
