@@ -66,19 +66,17 @@ cmd(plugin, async (conn, mek, m, {
         viewOnce: true
       }, { quoted: mek });
     } else {
-      const sections = [{
-        title: "Choose an option",
-        rows: [
-          { title: "📖 Menu", rowId: prefix + "menu", description: "Command Menu" },
-          { title: "📍 Ping", rowId: prefix + "ping", description: "Check Bot Speed" }
-        ]
-      }];
-      await conn.replyList(from, {
+      // If you want to use buttons with a list-like structure
+      const buttons = [
+        { buttonId: prefix + "menu", buttonText: { displayText: "📖 Menu" } },
+        { buttonId: prefix + "ping", buttonText: { displayText: "📍 Ping" } }
+      ];
+      await conn.sendMessage(from, {
         image,
         caption: msg,
         footer: config.FOOTER,
-        buttonText: "Select an option",
-        sections
+        buttons,
+        headerType: 4
       }, { quoted: mek });
     }
 
