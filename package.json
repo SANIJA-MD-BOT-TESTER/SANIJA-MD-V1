@@ -51,6 +51,9 @@
     "@mrnima/facebook-downloader":"1.0.0",
     "mrnima-moviedl":"1.0.0",
     "denethdev-ytmp3":"1.0.3",
+    "@whiskeysockets/baileys": "github:AxellNetwork/Baileys",
     "wikipedia":"2.1.2"
+   
+
   }
 }
