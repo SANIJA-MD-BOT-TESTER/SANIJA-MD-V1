@@ -11,16 +11,17 @@ cmd({
 },
 async (conn, mek, m, { from, reply }) => {
     try {
-       const status = `╭━━〔 *(◕‿↼) 𝓢𝓐𝓝𝓘𝓙𝓐-𝓜𝓓-𝓿1* 〕━━┈⊷
-┃◈╭─────────────·๏
-┃◈┃• *⏳ Uptime*:  ${runtime(process.uptime())} 
-┃◈┃• *📟 Ram Usage*: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${(os.totalmem() / 1024 / 1024).toFixed(2)}MB
-┃◈┃• *⚙️ Host Name*: ${os.hostname()}
-┃◈┃• *👨‍💻 Owner*: Sanija Nimtharu
-┃◈┃• *🧬 Version*: 1.0.1
-┃◈└───────────┈⊷
-╰──────────────┈⊷
-> *© Powered By SANIJA MD*`;
+        const uptime = process.uptime(); // in seconds
+        const hours = Math.floor(uptime / 3600);
+        const minutes = Math.floor((uptime % 3600) / 60);
+        const seconds = Math.floor(uptime % 60);
+        const timeNow = new Date().toLocaleTimeString('en-US', { hour12: true });
+
+        const aliveMessage = `👑 SANIJA MD Is Online 🌚
+
+⏱ Uptime: ${hours}h ${minutes}m ${seconds}s
+🕒 Time: ${timeNow}
+✨ Status: I'm alive and working!`;
 
         if (config.BUTTON === 'true') {
             await conn.sendMessage(from, {
@@ -40,13 +41,13 @@ async (conn, mek, m, { from, reply }) => {
                 headerType: 1,
                 viewOnce: true,
                 image: { url: "https://files.catbox.moe/b61wmw.png" },
-                caption: status,
+                caption: aliveMessage,
                 contextInfo: {
                     isForwarded: true,
                     mentionedJid: [m.sender],
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: "120363296974282444@newsletter",
-                        newsletterName: "SANIJA-MD"
+                        newsletterName: "SANIJA MD"
                     }
                 }
             }, { quoted: mek });
