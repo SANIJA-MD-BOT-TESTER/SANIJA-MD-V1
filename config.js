@@ -27,6 +27,6 @@
  BOT_NAME: process.env.BOT_NAME || "『 SANIJA-MD_V1 』",
  OMDB_API_KEY: process.env.OMDB_API_KEY || "76cb7f39",// omdbapi.com
  START_IMG: process.env.START_IMG || "https://files.catbox.moe/d2d02k.png",
- THEME: process.env.THEME || "button",
+ BUTTON: process.env.BUTTON || "true",
  FOOTER: process.env.FOOTER || "『 SANIJA-MD_V1 』"
  };
