@@ -1,81 +1,63 @@
-const os = require("os");
-const { runtime } = require("../lib/functions");
-const { cmd } = require("../command");
-const config = require("../config");
+const { cmd, commands } = require('../command');
+const fs = require('fs');
+const config = require('../config');
 
-const plugin = {
-  pattern: "alive",
-  react: "👨‍💻",
-  alias: ["test", "bot", "online"],
-  desc: "Check if the bot is online and get system info.",
-  category: "main",
-  filename: __filename
-};
+cmd({
+    pattern: "alive",
+    desc: "Bot's Online or No.",
+    react: "👋",
+    category: "main",
+    filename: __filename
+},
+async (conn, mek, m, { from, reply }) => {
+    try {
+       const status = `╭━━〔 *(◕‿↼) 𝓢𝓐𝓝𝓘𝓙𝓐-𝓜𝓓-𝓿1* 〕━━┈⊷
+┃◈╭─────────────·๏
+┃◈┃• *⏳ Uptime*:  ${runtime(process.uptime())} 
+┃◈┃• *📟 Ram Usage*: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB / ${(os.totalmem() / 1024 / 1024).toFixed(2)}MB
+┃◈┃• *⚙️ Host Name*: ${os.hostname()}
+┃◈┃• *👨‍💻 Owner*: Sanija Nimtharu
+┃◈┃• *🧬 Version*: 1.0.1
+┃◈└───────────┈⊷
+╰──────────────┈⊷
+> *© Powered By SANIJA MD*`;
 
-cmd(plugin, async (conn, mek, m, {
-  from,
-  prefix,
-  l,
-  quoted,
-  body,
-  isCmd,
-  command,
-  args,
-  q,
-  isGroup,
-  sender,
-  senderNumber,
-  botNumber2,
-  botNumber,
-  pushname,
-  isMe,
-  isOwner,
-  groupMetadata,
-  groupName,
-  participants,
-  groupAdmins,
-  isBotAdmins,
-  isAdmins,
-  reply
-}) => {
-  try {
-    let hostname = os.hostname();
-    if (hostname.length == 12) hostname = "replit";
-    else if (hostname.length == 36) hostname = "heroku";
-    else if (hostname.length == 8) hostname = "koyeb";
-
-    const uptime = runtime(process.uptime());
-    const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-    const memTotal = Math.round(os.totalmem() / 1024 / 1024);
-
-    const msg = `👋 Hello ${pushname}, I'm *alive* now.\n\n*🚀 Version:* ${require("../package.json").version}\n*📟 Memory:* ${memUsed}MB / ${memTotal}MB\n*🕒 Uptime:* ${uptime}\n*📍 Platform:* ${hostname}\n\n🐼 Powered by *SANIJA-MD*\n🌸 Have a nice day!`;
-
-    const image = { url: config.LOGO || "https://files.catbox.moe/b61wmw.png" };
-
-    if (config.MODE === "button") {
-      const buttons = [
-        { buttonId: prefix + "menu", buttonText: { displayText: "MENU" } },
-        { buttonId: prefix + "ping", buttonText: { displayText: "PING" } }
-      ];
-      await conn.sendMessage(from, {
-        image,
-        caption: msg,
-        footer: config.FOOTER,
-        buttons,
-        headerType: 4,
-        viewOnce: true
-      }, { quoted: mek });
-    } else {
-      await conn.sendMessage(from, {
-        image,
-        caption: msg,
-        footer: config.FOOTER,
-        viewOnce: true
-      }, { quoted: mek });
+        if (config.BUTTON === 'true') {
+            await conn.sendMessage(from, {
+                footer: '© 2025 SANIJA MD',
+                buttons: [
+                    {
+                        buttonId: '.system',
+                        buttonText: { displayText: 'System 📟' },
+                        type: 1
+                    },
+                    {
+                        buttonId: '.ping',
+                        buttonText: { displayText: 'Ping 📍' },
+                        type: 1
+                    }
+                ],
+                headerType: 1,
+                viewOnce: true,
+                image: { url: "https://files.catbox.moe/b61wmw.png" },
+                caption: status,
+                contextInfo: {
+                    isForwarded: true,
+                    mentionedJid: [m.sender],
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: "120363296974282444@newsletter",
+                        newsletterName: "SANIJA-MD"
+                    }
+                }
+            }, { quoted: mek });
+        } else {
+            await conn.sendMessage(from, {
+                image: { url: "https://files.catbox.moe/b61wmw.png" },
+                caption: aliveMessage
+            }, { quoted: mek });
+        }
+    } catch (e) {
+        console.log(e);
+        reply("*ERROR ❗❗*");
     }
-
-  } catch (err) {
-    reply("⚠️ Error occurred!");
-    console.error("Alive Plugin Error:", err);
-  }
 });
