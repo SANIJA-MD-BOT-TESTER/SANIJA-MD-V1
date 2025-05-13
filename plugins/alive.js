@@ -29,12 +29,12 @@ async (conn, mek, m, { from, reply }) => {
                 buttons: [
                     {
                         buttonId: '.system',
-                        buttonText: { displayText: 'System 📟' },
+                        buttonText: { displayText: '.System ' },
                         type: 1
                     },
                     {
                         buttonId: '.ping',
-                        buttonText: { displayText: 'Ping 📍' },
+                        buttonText: { displayText: '.Ping ' },
                         type: 1
                     }
                 ],
